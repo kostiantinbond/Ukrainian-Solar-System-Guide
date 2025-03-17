@@ -1,1 +1,356 @@
-# Ukrainian-Solar-System-Guide
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Симулятор сонячної системи для дітей</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+        
+        #solar-system {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background-image: radial-gradient(circle, #0a0e2a 0%, #02010a 100%);
+            overflow: hidden;
+        }
+        
+        #solar-system:before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 2px),
+                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 1px);
+            background-size: 100px 100px, 50px 50px;
+            top: 0;
+            left: 0;
+            animation: twinkle 8s linear infinite;
+        }
+        
+        @keyframes twinkle {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+        
+        .sun {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, #ffd200 0%, #f9b700 70%, #ff8100 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 100px #ff8100;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+        
+        .orbit {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            border-radius: 50%;
+            border: 1px dashed rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+        }
+        
+        .planet {
+            position: absolute;
+            border-radius: 50%;
+            transform-origin: center;
+            cursor: pointer;
+            z-index: 9;
+        }
+        
+        .info-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            padding: 15px;
+            width: 280px;
+            border: 2px solid #4a4a8d;
+            display: none;
+            z-index: 100;
+        }
+        
+        .info-panel h2 {
+            margin-top: 0;
+            color: #ffd200;
+            text-align: center;
+        }
+        
+        .info-panel p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        
+        .title {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            color: #ffd200;
+            z-index: 100;
+        }
+        
+        .instruction {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            font-size: 16px;
+            color: #fff;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div id="solar-system">
+        <div class="title">Сонячна система</div>
+        <div class="instruction">Натисніть на планету, щоб дізнатися більше!</div>
+        <div class="sun" data-name="Сонце"></div>
+        <div class="info-panel">
+            <h2 id="info-title">Планета</h2>
+            <p id="info-description"></p>
+            <p id="info-diameter"></p>
+            <p id="info-distance"></p>
+            <p id="info-day"></p>
+            <p id="info-year"></p>
+            <p id="info-temperature"></p>
+            <p id="info-moons"></p>
+            <p id="info-fun-fact"></p>
+        </div>
+    </div>
+
+    <script>
+        const planets = [
+            {
+                name: "Меркурій",
+                diameter: 4879,
+                distance: 57.9,
+                day: 59,
+                year: 88,
+                color: "#b5b5b5",
+                size: 12,
+                speed: 6,
+                orbitSize: 160,
+                temperature: "від -180°C до +430°C",
+                moons: 0,
+                description: "Найменша планета, найближча до Сонця.",
+                funFact: "На Меркурії день довший за рік!"
+            },
+            {
+                name: "Венера",
+                diameter: 12104,
+                distance: 108.2,
+                day: 243,
+                year: 225,
+                color: "#e88a63",
+                size: 20,
+                speed: 4.3,
+                orbitSize: 220,
+                temperature: "близько +462°C",
+                moons: 0,
+                description: "Друга від Сонця та найгарячіша планета.",
+                funFact: "Венера обертається в напрямку, протилежному більшості планет."
+            },
+            {
+                name: "Земля",
+                diameter: 12742,
+                distance: 149.6,
+                day: 1,
+                year: 365.25,
+                color: "#4f95ea",
+                size: 22,
+                speed: 3.6,
+                orbitSize: 280,
+                temperature: "від -88°C до +58°C",
+                moons: 1,
+                description: "Наша домівка, єдина відома планета з життям.",
+                funFact: "Земля єдина планета, яка не названа на честь бога."
+            },
+            {
+                name: "Марс",
+                diameter: 6779,
+                distance: 227.9,
+                day: 1.03,
+                year: 687,
+                color: "#d07a5e",
+                size: 16,
+                speed: 2.9,
+                orbitSize: 340,
+                temperature: "від -140°C до +20°C",
+                moons: 2,
+                description: "Червона планета, названа на честь римського бога війни.",
+                funFact: "На Марсі є найвища гора в Сонячній системі - Олімп."
+            },
+            {
+                name: "Юпітер",
+                diameter: 139820,
+                distance: 778.5,
+                day: 0.41,
+                year: 4333,
+                color: "#e3b68d",
+                size: 45,
+                speed: 1.6,
+                orbitSize: 420,
+                temperature: "близько -145°C",
+                moons: 79,
+                description: "Найбільша планета Сонячної системи.",
+                funFact: "Велика червона пляма на Юпітері - це буря, яка триває вже понад 300 років."
+            },
+            {
+                name: "Сатурн",
+                diameter: 116460,
+                distance: 1433.5,
+                day: 0.44,
+                year: 10759,
+                color: "#e0bb95",
+                size: 38,
+                speed: 1.2,
+                orbitSize: 500,
+                temperature: "близько -178°C",
+                moons: 82,
+                description: "Планета з красивими кільцями з льоду та пилу.",
+                funFact: "Сатурн такий легкий, що міг би плавати у воді."
+            },
+            {
+                name: "Уран",
+                diameter: 50724,
+                distance: 2872.5,
+                day: 0.72,
+                year: 30687,
+                color: "#c1eafa",
+                size: 30,
+                speed: 0.8,
+                orbitSize: 580,
+                temperature: "близько -224°C",
+                moons: 27,
+                description: "Блакитна планета, яка обертається на боці.",
+                funFact: "Уран обертається майже лежачи на боці через давнє зіткнення."
+            },
+            {
+                name: "Нептун",
+                diameter: 49244,
+                distance: 4495.1,
+                day: 0.67,
+                year: 60190,
+                color: "#5b76fa",
+                size: 28,
+                speed: 0.6,
+                orbitSize: 660,
+                temperature: "близько -218°C",
+                moons: 14,
+                description: "Найвіддаленіша планета, синя як океан.",
+                funFact: "На Нептуні дують найсильніші вітри в Сонячній системі - до 2100 км/год."
+            }
+        ];
+
+        const sunData = {
+            name: "Сонце",
+            diameter: 1392700,
+            distance: 0,
+            day: 25,
+            year: 0,
+            temperature: "близько 5500°C на поверхні, 15 000 000°C в центрі",
+            moons: 0,
+            description: "Зірка в центрі нашої Сонячної системи.",
+            funFact: "Сонце містить 99.86% всієї маси Сонячної системи."
+        };
+
+        // Додати планети
+        planets.forEach(planet => {
+            // Створити орбіту
+            const orbit = document.createElement('div');
+            orbit.className = 'orbit';
+            orbit.style.width = `${planet.orbitSize}px`;
+            orbit.style.height = `${planet.orbitSize}px`;
+            document.getElementById('solar-system').appendChild(orbit);
+            
+            // Створити планету
+            const planetElement = document.createElement('div');
+            planetElement.className = 'planet';
+            planetElement.setAttribute('data-name', planet.name);
+            planetElement.style.width = `${planet.size}px`;
+            planetElement.style.height = `${planet.size}px`;
+            planetElement.style.backgroundColor = planet.color;
+            
+            // Додати тінь для об'ємності
+            planetElement.style.boxShadow = `inset ${-planet.size/5}px ${-planet.size/5}px ${planet.size/3}px rgba(0,0,0,0.6)`;
+            
+            // Додати кільця для Сатурна
+            if (planet.name === "Сатурн") {
+                planetElement.style.boxShadow = `inset ${-planet.size/5}px ${-planet.size/5}px ${planet.size/3}px rgba(0,0,0,0.6), 0 0 0 10px rgba(200, 180, 100, 0.2)`;
+            }
+            
+            document.getElementById('solar-system').appendChild(planetElement);
+            
+            // Анімація руху по орбіті
+            animatePlanet(planetElement, planet);
+            
+            // Додати обробник кліку
+            planetElement.addEventListener('click', () => showInfo(planet));
+        });
+        
+        // Додати обробник кліку для Сонця
+        document.querySelector('.sun').addEventListener('click', () => showInfo(sunData));
+        
+        // Функція для анімації руху планет
+        function animatePlanet(element, planet) {
+            const orbitRadius = planet.orbitSize / 2;
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            
+            let angle = Math.random() * Math.PI * 2; // Рандомний початковий кут
+            
+            function updatePosition() {
+                const x = centerX + orbitRadius * Math.cos(angle);
+                const y = centerY + orbitRadius * Math.sin(angle);
+                
+                element.style.left = `${x - planet.size/2}px`;
+                element.style.top = `${y - planet.size/2}px`;
+                
+                angle += 0.002 * planet.speed;
+                
+                requestAnimationFrame(updatePosition);
+            }
+            
+            updatePosition();
+        }
+        
+        // Функція для відображення інформації про планету
+        function showInfo(planet) {
+            const infoPanel = document.querySelector('.info-panel');
+            document.getElementById('info-title').textContent = planet.name;
+            document.getElementById('info-description').textContent = planet.description;
+            document.getElementById('info-diameter').textContent = `Діаметр: ${planet.diameter} км`;
+            document.getElementById('info-distance').textContent = `Відстань від Сонця: ${planet.distance} млн км`;
+            document.getElementById('info-day').textContent = `Тривалість доби: ${planet.day} земних діб`;
+            document.getElementById('info-year').textContent = `Тривалість року: ${planet.year} земних діб`;
+            document.getElementById('info-temperature').textContent = `Температура: ${planet.temperature}`;
+            document.getElementById('info-moons').textContent = `Кількість супутників: ${planet.moons}`;
+            document.getElementById('info-fun-fact').textContent = `Цікавий факт: ${planet.funFact}`;
+            
+            infoPanel.style.display = 'block';
+        }
+        
+        // Закриття інформаційної панелі при кліку на пустому місці
+        document.getElementById('solar-system').addEventListener('click', (event) => {
+            if (event.target.id === 'solar-system') {
+                document.querySelector('.info-panel').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
